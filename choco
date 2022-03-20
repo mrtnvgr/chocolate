@@ -3,9 +3,9 @@ import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 from PyQt5 import QtCore, QtWidgets, QtGui
-import sys, json, subprocess, threading, time, requests
+import sys, json, subprocess, threading, time, requests, datetime
 
-def term_run(cmd): return subprocess.run(cmd.split(" "), stdout=subprocess.PIPE).stdout.decode('utf-8').split("\n")
+def term_run(cmd): return subprocess.run(cmd.split(" "), stdout=subprocess.PIPE, cwd=sys.path[0]).stdout.decode('utf-8').split("\n")
 
 if len(sys.argv)==1:
     print("Specify config path")
@@ -73,6 +73,8 @@ def rates(rt1, rt2):
     else:
         return ""
 
+def date(formt): return datetime.datetime.now().strftime(formt)
+
 def updateModule(align, index):
     if align=="right":
         cmd = config["right_modules"][index][0]
@@ -99,16 +101,19 @@ def updateModule(align, index):
         time.sleep(intrv)
 
 def updateDesktops():
-    while True:
-        if config["wm"]=="bspwm":
-            leftlabel.setText(term_run("bspc query -D -d --names")[0])
-            selectedWindow = term_run("bspc query -n focused.local -T")[0]
+    if config["wm"]=="bspwm":
+        while True:
+            new = term_run("bspc query -D -d focused --names")[0]
+            if new!=leftlabel.text():
+                leftlabel.setText(new)
+            selectedWindow = term_run("bspc query -N -n '.local.!hidden.windpw.focused' -T")[0]
             if selectedWindow!="":
                 if json.loads(selectedWindow)["client"]["state"]=="fullscreen":
                     window.hide()
                 else:
                     if window.isHidden:
                         window.show()
+            time.sleep(0.2)
 
 if __name__ == "__main__":
     window.show()
