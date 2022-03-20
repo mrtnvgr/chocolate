@@ -1,0 +1,120 @@
+#!/bin/python
+import signal
+signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+from PyQt5 import QtCore, QtWidgets, QtGui
+import sys, json, subprocess, threading, time, requests
+
+def term_run(cmd): return subprocess.run(cmd.split(" "), stdout=subprocess.PIPE).stdout.decode('utf-8').split("\n")
+
+if len(sys.argv)==1:
+    print("Specify config path")
+    sys.exit(0)
+
+config = json.load(open(sys.argv[1]))
+RIGHTOUTPUTS = [""]*len(config["right_modules"])
+CENTEROUTPUTS = [""]*len(config["center_modules"])
+active = True
+
+app = QtWidgets.QApplication([])
+window = QtWidgets.QMainWindow()
+window.setWindowTitle("chocolatebar")
+window.setWindowFlags(QtCore.Qt.Dialog | QtCore.Qt.FramelessWindowHint |
+                      QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.Tool |
+                      QtCore.Qt.X11BypassWindowManagerHint)
+window.setStyleSheet("background:"+config["colors"]["background"])
+window.move(config["position"]["height"],config["position"]["height"])
+window.setFixedSize(config["size"]["width"],config["size"]["height"])
+
+widget = QtWidgets.QWidget()
+
+layout = QtWidgets.QHBoxLayout(widget)
+layout.setContentsMargins(0,0,0,0)
+layout.setSpacing(0)
+
+fontstyle = 'color: '+config["colors"]['text']
+if config["font"]["bold"].lower()=="true": fontstyle = fontstyle+";font-weight: bold"
+
+leftlabel = QtWidgets.QLabel()
+leftlabel.setAlignment(QtCore.Qt.AlignLeft)
+leftlabel.setStyleSheet(fontstyle)
+leftlabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+leftlabel.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
+
+rightlabel = QtWidgets.QLabel()
+rightlabel.setAlignment(QtCore.Qt.AlignRight)
+rightlabel.setStyleSheet(fontstyle)
+rightlabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+rightlabel.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
+
+centerlabel = QtWidgets.QLabel()
+centerlabel.setAlignment(QtCore.Qt.AlignCenter)
+centerlabel.setStyleSheet(fontstyle)
+centerlabel.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
+
+layout.addWidget(leftlabel)
+layout.addWidget(centerlabel)
+layout.addWidget(rightlabel)
+
+window.setCentralWidget(widget)
+
+def weather(city_id, api_key, lang, type):
+    response = requests.get(f"https://api.openweathermap.org/data/2.5/weather?id={city_id}&lang={lang}&appid={api_key}&units={type}")
+    if response.status_code==200:
+        data = response.json()
+        return f"{data['main']['temp']}°C ({data['weather'][0]['description']})"
+    else:
+        return ""
+
+def rates(rt1, rt2):
+    response = requests.get(f'https://freecurrencyrates.com/api/action.php?do=cvals&iso={rt1}&f={rt2}&v=1&s=cbr')
+    if response.status_code==200:
+        return str(round(response.json()[rt1.upper()],2))
+    else:
+        return ""
+
+def updateModule(align, index):
+    if align=="right":
+        cmd = config["right_modules"][index][0]
+        label = config["right_modules"][index][1]
+        intrv = config["right_modules"][index][2]
+        term = config["right_modules"][index][3]
+    elif align=="center":
+        cmd = config["center_modules"][index][0]
+        label = config["center_modules"][index][1]
+        intrv = config["center_modules"][index][2]
+        term = config["center_modules"][index][3]
+    while True:
+        if term.lower()=="true":
+            output = term_run(cmd)[0]
+        else:
+            output = eval(cmd)
+            if output==None: output=""
+        if align=="right":
+            RIGHTOUTPUTS[index] = label.format(output)
+            rightlabel.setText(config["spacing"].join(RIGHTOUTPUTS))
+        elif align=="center":
+            CENTEROUTPUTS[index] = output
+            centerlabel.setText(label.format(config["spacing"].join(CENTEROUTPUTS)))
+        time.sleep(intrv)
+
+def updateDesktops():
+    while True:
+        if config["wm"]=="bspwm":
+            leftlabel.setText(term_run("bspc query -D -d --names")[0])
+            selectedWindow = term_run("bspc query -n focused.local -T")[0]
+            if selectedWindow!="":
+                if json.loads(selectedWindow)["client"]["state"]=="fullscreen":
+                    window.hide()
+                else:
+                    if window.isHidden:
+                        window.show()
+
+if __name__ == "__main__":
+    window.show()
+    for module in range(len(config["right_modules"])): # updating right user modules
+        threading.Thread(target=updateModule, args=["right", module]).start()
+    for module in range(len(config["center_modules"])): # updating center user modules
+        threading.Thread(target=updateModule, args=["center", module]).start()
+    threading.Thread(target=updateDesktops).start()
+    sys.exit(app.exec_())
