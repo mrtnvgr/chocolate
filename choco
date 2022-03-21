@@ -1,15 +1,20 @@
 #!/bin/python
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
-
-from PyQt5 import QtCore, QtWidgets, QtGui
 import sys, json, subprocess, threading, time, requests, datetime
+from PyQt5 import QtCore, QtWidgets, QtGui
+
+version = "0.0.3"
 
 def term_run(cmd): return subprocess.run(cmd.split(" "), stdout=subprocess.PIPE, cwd=sys.path[0]).stdout.decode('utf-8').split("\n")
 
 if len(sys.argv)==1:
     print("Specify config path")
     sys.exit(0)
+else:
+    if sys.argv[1]=="-v" or sys.argv[1]=="--version":
+        print("Chocolate "+version+" ଲ(ⓛ ω ⓛ)ଲ")
+        sys.exit(0)
 
 config = json.load(open(sys.argv[1]))
 RIGHTOUTPUTS = [""]*len(config["right_modules"])
@@ -102,24 +107,36 @@ def updateModule(align, index):
 
 def updateDesktops():
     if config["wm"]=="bspwm":
-        while True:
-            new = term_run("bspc query -D -d focused --names")[0]
-            if new!=leftlabel.text():
-                leftlabel.setText(new)
-            selectedWindow = term_run("bspc query -N -n '.local.!hidden.windpw.focused' -T")[0]
-            if selectedWindow!="":
-                if json.loads(selectedWindow)["client"]["state"]=="fullscreen":
-                    window.hide()
-                else:
-                    if window.isHidden:
+        curDesktop = term_run("bspc query -D -d focused")[0]
+        curDesktopName = term_run("bspc query -D -d focused --names")[0]
+        leftlabel.setText("    " + curDesktopName)
+        fullscreenDesktop = []
+        with subprocess.Popen(["bspc","subscribe","desktop_focus","node_state"], stdout=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
+            for line in p.stdout:
+                splitted = line.replace("\n", "").split(" ")
+                print(splitted)
+                if 'desktop_focus' in line:
+                    curDesktop = splitted[2]
+                    curDesktopName = term_run("bspc query -T -d")[0].split('{"name":"')[1].split('","')[0]
+                    leftlabel.setText("    " + curDesktopName)
+                    if splitted[2] not in fullscreenDesktop:
                         window.show()
-            time.sleep(0.2)
+                    else:
+                        window.hide()
+                elif 'node_state' in line:
+                    if splitted[2]==curDesktop and splitted[4]=="fullscreen":
+                            if splitted[5]=="on":
+                                fullscreenDesktop.append(curDesktop)
+                                window.hide()
+                            else:
+                                fullscreenDesktop.remove(curDesktop)
+                                window.show()
 
 if __name__ == "__main__":
     window.show()
-    for module in range(len(config["right_modules"])): # updating right user modules
+    for module in range(len(config["right_modules"])):
         threading.Thread(target=updateModule, args=["right", module]).start()
-    for module in range(len(config["center_modules"])): # updating center user modules
+    for module in range(len(config["center_modules"])):
         threading.Thread(target=updateModule, args=["center", module]).start()
     threading.Thread(target=updateDesktops).start()
     sys.exit(app.exec_())
