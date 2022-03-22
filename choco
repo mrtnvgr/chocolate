@@ -4,7 +4,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 import os, sys, json, subprocess, threading, time, requests, datetime
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-version = "0.0.4"
+version = "0.0.5"
 
 def term_run(cmd): return subprocess.run(cmd.split(" "), stdout=subprocess.PIPE, cwd=sys.path[0]).stdout.decode('utf-8').split("\n")
 
@@ -47,7 +47,9 @@ def updateModule(align, index):
             output = term_run(cmd)[0]
         else:
             output = eval(cmd)
-            if output==False: output=""
+            if output==False:
+                time.sleep(intrv)
+                continue
         if align=="right":
             RIGHTOUTPUTS[index] = label.format(output)
             rightlabel.setText(config["spacing"].join(RIGHTOUTPUTS))
@@ -98,6 +100,8 @@ def menuChanged(text):
 
 def menuReturnPressed():
     try:
+        if len(elementslabel.text().split(" "))==1:
+            subprocess.Popen(elementslabel.text().split(" ")[0],shell=True)
         subprocess.Popen(linedit.text(),shell=True)
         die()
     except FileNotFoundError:
