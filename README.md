@@ -1,2 +1,2 @@
 # chocolate
-Chocolate (chocobar) - status bar written on Python
+Chocolate - status and select menu bars written on Python
