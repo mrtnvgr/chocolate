@@ -1,10 +1,10 @@
 #!/bin/python
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
-import os, sys, json, subprocess, threading, time, requests, datetime
+import os, sys, json, subprocess, threading, time, requests, datetime, argparse
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-version = "0.0.5"
+version = "0.0.6"
 
 def term_run(cmd): return subprocess.run(cmd.split(" "), stdout=subprocess.PIPE, cwd=sys.path[0]).stdout.decode('utf-8').split("\n")
 
@@ -92,8 +92,8 @@ def menuChanged(text):
     #linedit.adjustSize()
     if text!="":
         d_elems = []
-        for elem in range(len(sys.argv)-3):
-            if sys.argv[elem].startswith(text): d_elems.append(sys.argv[elem])
+        for elem in args.text.split("\n"):
+            if elem.startswith(text): d_elems.append(elem)
         elementslabel.setText('    '.join(d_elems))
     else:
         elementslabel.setText("")
@@ -102,90 +102,118 @@ def menuReturnPressed():
     try:
         if len(elementslabel.text().split(" "))==1:
             subprocess.Popen(elementslabel.text().split(" ")[0],shell=True)
-        subprocess.Popen(linedit.text(),shell=True)
+        else:
+            subprocess.Popen(linedit.text(),shell=True)
         die()
     except FileNotFoundError:
         pass
 
-if len(sys.argv)==1:
-    print("Specify config path")
-    sys.exit(0)
+parser = argparse.ArgumentParser(description='github.com/mrtnvgr/choco')
+parser.add_argument('-c','--config', help='configuration file')
+parser.add_argument('-m','--mode', help='mode')
+parser.add_argument('-t','--text', help='text (for menu&notify)')
+parser.add_argument('-v','--version', action='store_true', help='version')
+args = parser.parse_args()
+
+if args.version==True:
+    print("Chocolate "+version+" ଲ(ⓛ ω ⓛ)ଲ")
+elif args.config==None:
+    print("Specify config file")
+elif args.mode==None:
+    print("Specify mode")
+elif args.mode!="bar" and args.text==None:
+    print("Specify text")
 else:
-    if sys.argv[1]=="-v" or sys.argv[1]=="--version":
-        print("Chocolate "+version+" ଲ(ⓛ ω ⓛ)ଲ")
-        sys.exit(0)
+    if args.config=="default": args.config = os.getenv("HOME")+"/.config/choco/chocorc"
+    config = json.load(open(args.config))
+    app = QtWidgets.QApplication([])
+    window = QtWidgets.QMainWindow()
+    if args.mode=="bar":
+        RIGHTOUTPUTS = [""]*len(config["right_modules"])
+        CENTEROUTPUTS = [""]*len(config["center_modules"])
+        window.setWindowFlags(QtCore.Qt.Dialog | QtCore.Qt.FramelessWindowHint |
+                          QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.Tool |
+                          QtCore.Qt.X11BypassWindowManagerHint)
+        window.setWindowTitle("chocolatebar")
+        window.move(int(config["bar"]["position"].lower().split("x")[0]),int(config["bar"]["position"].lower().split("x")[1]))
+        window.setFixedSize(int(config["bar"]["size"].lower().split("x")[0]),int(config["bar"]["size"].lower().split("x")[1]))
+        window.setStyleSheet("background:"+config["bar"]["backgroundColor"]+";border: "+config["bar"]["border"])
+        fontstyle = 'color: '+config["bar"]['textColor']
     else:
-        config = json.load(open(sys.argv[1]))
-        app = QtWidgets.QApplication([])
-        window = QtWidgets.QMainWindow()
-        if len(sys.argv)<3:
-            RIGHTOUTPUTS = [""]*len(config["right_modules"])
-            CENTEROUTPUTS = [""]*len(config["center_modules"])
-            window.setWindowFlags(QtCore.Qt.Dialog | QtCore.Qt.FramelessWindowHint |
-                              QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.Tool |
-                              QtCore.Qt.X11BypassWindowManagerHint)
-            window.setWindowTitle("chocolatebar")
-        else:
-            window.setWindowFlags(QtCore.Qt.Popup | QtCore.Qt.FramelessWindowHint |
-                                  QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.X11BypassWindowManagerHint)
+        window.setWindowFlags(QtCore.Qt.Popup | QtCore.Qt.FramelessWindowHint |
+                              QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.X11BypassWindowManagerHint)
+        if args.mode=="notify":
+            window.move(int(config["notify"]["position"].lower().split("x")[0]),int(config["notify"]["position"].lower().split("x")[1]))
+            window.setWindowTitle("chocolatenotify")
+            window.setStyleSheet("background:"+config["notify"]["backgroundColor"]+";border: "+config["notify"]["border"])
+            fontstyle = 'color: '+config["notify"]["textColor"]
+        elif args.mode=="menu":
+            window.move(int(config["menu"]["position"].lower().split("x")[0]),int(config["menu"]["position"].lower().split("x")[1]))
+            window.setFixedSize(int(config["menu"]["size"].lower().split("x")[0]),int(config["menu"]["size"].lower().split("x")[1]))
             window.setWindowTitle("chocolatemenu")
-        window.setStyleSheet("background:"+config["colors"]["background"])
-        window.move(config["position"]["width"],config["position"]["height"])
-        window.setFixedSize(config["size"]["width"],config["size"]["height"])
-        widget = QtWidgets.QWidget()
-        layout = QtWidgets.QHBoxLayout(widget)
-        layout.setContentsMargins(0,0,0,0)
-        layout.setSpacing(0)
-        fontstyle = 'color: '+config["colors"]['text']
-        if config["font"]["bold"].lower()=="true": fontstyle = fontstyle+";font-weight: bold"
-        window.setCentralWidget(widget)
-        if len(sys.argv)<3:
-            leftlabel = QtWidgets.QLabel()
-            leftlabel.setAlignment(QtCore.Qt.AlignLeft)
-            leftlabel.setStyleSheet(fontstyle)
-            leftlabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-            leftlabel.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
+            window.setStyleSheet("background:"+config["menu"]["backgroundColor"]+";border: "+config["menu"]["border"])
+            fontstyle = 'color: '+config["menu"]["textColor"]
+    widget = QtWidgets.QWidget()
+    layout = QtWidgets.QHBoxLayout(widget)
+    layout.setContentsMargins(0,0,0,0)
+    layout.setSpacing(0)
+    if config["font"]["bold"].lower()=="true": fontstyle = fontstyle+";font-weight: bold"
+    window.setCentralWidget(widget)
+    if args.mode=="bar":
+        leftlabel = QtWidgets.QLabel()
+        leftlabel.setAlignment(QtCore.Qt.AlignLeft)
+        leftlabel.setStyleSheet(fontstyle)
+        leftlabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        leftlabel.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
 
-            rightlabel = QtWidgets.QLabel()
-            rightlabel.setAlignment(QtCore.Qt.AlignRight)
-            rightlabel.setStyleSheet(fontstyle)
-            rightlabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-            rightlabel.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
+        rightlabel = QtWidgets.QLabel()
+        rightlabel.setAlignment(QtCore.Qt.AlignRight)
+        rightlabel.setStyleSheet(fontstyle)
+        rightlabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        rightlabel.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
 
-            centerlabel = QtWidgets.QLabel()
-            centerlabel.setAlignment(QtCore.Qt.AlignCenter)
-            centerlabel.setStyleSheet(fontstyle)
-            centerlabel.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
+        centerlabel = QtWidgets.QLabel()
+        centerlabel.setAlignment(QtCore.Qt.AlignCenter)
+        centerlabel.setStyleSheet(fontstyle)
+        centerlabel.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
+        layout.addWidget(leftlabel)
+        layout.addWidget(centerlabel)
+        layout.addWidget(rightlabel)
 
-            layout.addWidget(leftlabel)
-            layout.addWidget(centerlabel)
-            layout.addWidget(rightlabel)
-
-            for module in range(len(config["right_modules"])):
-                threading.Thread(target=updateModule, args=["right", module]).start()
-            for module in range(len(config["center_modules"])):
-                threading.Thread(target=updateModule, args=["center", module]).start()
-            threading.Thread(target=updateDesktops).start()
-            window.show()
-        else:
-            linedit = QtWidgets.QLineEdit()
-            linedit.textChanged[str].connect(menuChanged)
-            linedit.returnPressed.connect(menuReturnPressed)
-            QtWidgets.QShortcut(QtGui.QKeySequence("ESCAPE"), linedit, activated=die)
-            linedit.setAlignment(QtCore.Qt.AlignLeft)
-            linedit.setStyleSheet(fontstyle+"; border:0px")
-            linedit.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-            linedit.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
-            linedit.setFocusPolicy(QtCore.Qt.StrongFocus)
-            layout.addWidget(linedit)
-
-            elementslabel = QtWidgets.QLabel()
-            elementslabel.setAlignment(QtCore.Qt.AlignRight)
-            elementslabel.setStyleSheet(fontstyle)
-            elementslabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-            elementslabel.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
-            layout.addWidget(elementslabel)
-
-            window.show()
-            linedit.setFocus()
-        sys.exit(app.exec_())
+        for module in range(len(config["right_modules"])):
+            threading.Thread(target=updateModule, args=["right", module]).start()
+        for module in range(len(config["center_modules"])):
+            threading.Thread(target=updateModule, args=["center", module]).start()
+        threading.Thread(target=updateDesktops).start()
+        window.show()
+    elif args.mode=="notify":
+        # TODO: on_click handlers
+        textlabel = QtWidgets.QLabel()
+        QtWidgets.QShortcut(QtGui.QKeySequence("RETURN"), textlabel, activated=die)
+        textlabel.setAlignment(QtCore.Qt.AlignLeft)
+        textlabel.setStyleSheet(fontstyle)
+        textlabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        textlabel.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
+        textlabel.setText(args.text)
+        layout.addWidget(textlabel)
+        window.show()
+    elif args.mode=="menu":
+        linedit = QtWidgets.QLineEdit()
+        linedit.textChanged[str].connect(menuChanged)
+        linedit.returnPressed.connect(menuReturnPressed)
+        QtWidgets.QShortcut(QtGui.QKeySequence("ESCAPE"), linedit, activated=die)
+        linedit.setAlignment(QtCore.Qt.AlignLeft)
+        linedit.setStyleSheet(fontstyle)
+        linedit.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        linedit.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
+        linedit.setFocusPolicy(QtCore.Qt.StrongFocus)
+        layout.addWidget(linedit)
+        elementslabel = QtWidgets.QLabel()
+        elementslabel.setAlignment(QtCore.Qt.AlignRight)
+        elementslabel.setStyleSheet(fontstyle)
+        elementslabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        elementslabel.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
+        layout.addWidget(elementslabel)
+        window.show()
+        linedit.setFocus()
+    sys.exit(app.exec_())

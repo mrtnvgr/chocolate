@@ -1,15 +1,23 @@
 {
-	"size": {
-		"width": 1920,
-		"height": 24
+	"bar": {
+		"size": "1920x24",
+		"position": "0x0",
+		"backgroundColor": "#000000",
+		"textColor":"#FFFFFF",
+		"border": "1px solid #FFFFFF"
 	},
-	"position": {
-		"width": 0,
-		"height": 0
+	"menu": {
+		"size": "1920x24",
+		"position": "0x0",
+		"backgroundColor": "#222222",
+		"textColor":"#FFFFFF",
+		"border": "1px solid #FFFFFF"
 	},
-	"colors": {
-		"background": "#000000",
-		"text":"#FFFFFF"
+	"notify": {
+		"position": "0x0",
+		"backgroundColor": "#222222",
+		"textColor":"#FFFFFF",
+		"border": "1px solid #FFFFFF"
 	},
 	"font": {
 		"family": "NTR",
