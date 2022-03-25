@@ -4,7 +4,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 import os, sys, json, subprocess, threading, time, requests, datetime, argparse
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-version = "0.0.6"
+version = "0.0.7"
 
 def term_run(cmd): return subprocess.run(cmd.split(" "), stdout=subprocess.PIPE, cwd=sys.path[0]).stdout.decode('utf-8').split("\n")
 
@@ -99,11 +99,12 @@ def menuChanged(text):
         elementslabel.setText("")
 
 def menuReturnPressed():
+    if args.exec_prefix==None: args.exec_prefix = ""
     try:
         if len(elementslabel.text().split(" "))==1:
-            subprocess.Popen(elementslabel.text().split(" ")[0],shell=True)
+            subprocess.Popen(args.exec_prefix+elementslabel.text().split(" ")[0],shell=True)
         else:
-            subprocess.Popen(linedit.text(),shell=True)
+            subprocess.Popen(args.exec_prefix+linedit.text(),shell=True)
         die()
     except FileNotFoundError:
         pass
@@ -112,6 +113,7 @@ parser = argparse.ArgumentParser(description='github.com/mrtnvgr/choco')
 parser.add_argument('-c','--config', help='configuration file')
 parser.add_argument('-m','--mode', help='mode')
 parser.add_argument('-t','--text', help='text (for menu&notify)')
+parser.add_argument('-ep', '--exec-prefix', help='exec prefix (for menu)')
 parser.add_argument('-v','--version', action='store_true', help='version')
 args = parser.parse_args()
 
