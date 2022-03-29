@@ -4,7 +4,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 import os, sys, json, subprocess, threading, time, requests, datetime, argparse
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-version = "0.0.8"
+version = "0.0.9"
 
 def term_run(cmd): return subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, cwd=sys.path[0]).stdout.decode('utf-8').split("\n")
 
@@ -110,7 +110,7 @@ def menuReturnPressed():
         pass
 
 parser = argparse.ArgumentParser(description='github.com/mrtnvgr/choco')
-parser.add_argument('-c','--config', help='configuration file')
+parser.add_argument('-c','--config', default='default', help='configuration file')
 parser.add_argument('-m','--mode', help='mode')
 parser.add_argument('-t','--text', help='text (for menu&notify)')
 parser.add_argument('-ep', '--exec-prefix', help='exec prefix (for menu)')
@@ -119,7 +119,7 @@ args = parser.parse_args()
 
 if args.version==True:
     print("Chocolate "+version+" ଲ(ⓛ ω ⓛ)ଲ")
-elif args.config==None:
+elif os.path.exists(args.config):
     print("Specify config file")
 elif args.mode==None:
     print("Specify mode")
