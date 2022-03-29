@@ -4,7 +4,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 import os, sys, json, subprocess, threading, time, requests, datetime, argparse
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-version = "0.0.9"
+version = "0.1.0"
 
 def term_run(cmd): return subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, cwd=sys.path[0]).stdout.decode('utf-8').split("\n")
 
@@ -164,19 +164,19 @@ else:
     if args.mode=="bar":
         leftlabel = QtWidgets.QLabel()
         leftlabel.setAlignment(QtCore.Qt.AlignLeft)
-        leftlabel.setStyleSheet(fontstyle)
+        leftlabel.setStyleSheet(fontstyle+";border-right: 0px")
         leftlabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         leftlabel.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
 
         rightlabel = QtWidgets.QLabel()
         rightlabel.setAlignment(QtCore.Qt.AlignRight)
-        rightlabel.setStyleSheet(fontstyle)
+        rightlabel.setStyleSheet(fontstyle+";border-left: 0px")
         rightlabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         rightlabel.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
 
         centerlabel = QtWidgets.QLabel()
         centerlabel.setAlignment(QtCore.Qt.AlignCenter)
-        centerlabel.setStyleSheet(fontstyle)
+        centerlabel.setStyleSheet(fontstyle+";border-left: 0px;border-right: 0px")
         centerlabel.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
         layout.addWidget(leftlabel)
         layout.addWidget(centerlabel)
@@ -205,14 +205,14 @@ else:
         linedit.returnPressed.connect(menuReturnPressed)
         QtWidgets.QShortcut(QtGui.QKeySequence("ESCAPE"), linedit, activated=die)
         linedit.setAlignment(QtCore.Qt.AlignLeft)
-        linedit.setStyleSheet(fontstyle)
+        linedit.setStyleSheet(fontstyle+";border-right: 0px")
         linedit.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         linedit.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
         linedit.setFocusPolicy(QtCore.Qt.StrongFocus)
         layout.addWidget(linedit)
         elementslabel = QtWidgets.QLabel()
         elementslabel.setAlignment(QtCore.Qt.AlignRight)
-        elementslabel.setStyleSheet(fontstyle)
+        elementslabel.setStyleSheet(fontstyle+";border-left: 0px")
         elementslabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         elementslabel.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
         layout.addWidget(elementslabel)
