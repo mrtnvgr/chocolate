@@ -4,7 +4,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 import os, sys, json, subprocess, threading, time, requests, datetime, argparse
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-version = "0.1.0"
+version = "0.1.1"
 
 def term_run(cmd): return subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, cwd=sys.path[0]).stdout.decode('utf-8').split("\n")
 
@@ -77,11 +77,12 @@ def updateDesktops():
                     else:
                         window.hide()
                 elif 'node_state' in line:
-                    if splitted[2]==curDesktop and splitted[4]=="fullscreen":
-                            if splitted[5]=="on":
-                                fullscreenDesktop.append(curDesktop)
-                                window.hide()
-                            else:
+                    if splitted[2]==curDesktop:
+                        if splitted[4]=="fullscreen" and splitted[5]=="on":
+                            fullscreenDesktop.append(curDesktop)
+                            window.hide()
+                        else:
+                            if curDesktop in fullscreenDesktop:
                                 fullscreenDesktop.remove(curDesktop)
                                 window.show()
 
