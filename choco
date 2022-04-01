@@ -4,7 +4,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 import os, sys, json, subprocess, threading, time, requests, datetime, argparse
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-version = "0.1.1"
+version = "0.1.2"
 
 def term_run(cmd): return subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, cwd=sys.path[0]).stdout.decode('utf-8').split("\n")
 
@@ -64,7 +64,7 @@ def updateDesktops():
         curDesktopName = term_run("bspc query -D -d focused --names")[0]
         leftlabel.setText("    " + curDesktopName)
         fullscreenDesktop = []
-        with subprocess.Popen(["bspc","subscribe","desktop_focus","node_state"], stdout=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
+        with subprocess.Popen(["bspc","subscribe","desktop_focus", "node_state", "node_remove"], stdout=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
             for line in p.stdout:
                 splitted = line.replace("\n", "").split(" ")
                 #print(splitted)
@@ -72,19 +72,23 @@ def updateDesktops():
                     curDesktop = splitted[2]
                     curDesktopName = term_run("bspc query -T -d")[0].split('{"name":"')[1].split('","')[0]
                     leftlabel.setText("    " + curDesktopName)
-                    if splitted[2] not in fullscreenDesktop:
-                        window.show()
-                    else:
-                        window.hide()
-                elif 'node_state' in line:
-                    if splitted[2]==curDesktop:
-                        if splitted[4]=="fullscreen" and splitted[5]=="on":
-                            fullscreenDesktop.append(curDesktop)
+                    for desktop in fullscreenDesktop:
+                        if curDesktop==desktop.split(";")[0]:
                             window.hide()
+                            break
                         else:
-                            if curDesktop in fullscreenDesktop:
-                                fullscreenDesktop.remove(curDesktop)
-                                window.show()
+                            if window.isHidden: window.show()
+                elif 'node_state' in line and splitted[4]=="fullscreen":
+                    if splitted[5]=="on":
+                        fullscreenDesktop.append(splitted[2]+";"+splitted[3])
+                        window.hide()
+                    else:
+                        fullscreenDesktop.remove(splitted[2]+";"+splitted[3])
+                        window.show()
+                elif 'node_remove' in line:
+                    if splitted[2]+";"+splitted[3] in fullscreenDesktop:
+                        fullscreenDesktop.remove(splitted[2]+";"+splitted[3])
+                        window.show()
 
 def die(): os.kill(os.getpid(), signal.SIGKILL)
 
