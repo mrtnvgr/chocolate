@@ -4,7 +4,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 import os, sys, json, subprocess, threading, time, requests, datetime, argparse
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-version = "0.1.3"
+version = "0.1.4"
 
 def term_run(cmd): return subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, cwd=sys.path[0]).stdout.decode('utf-8').split("\n")
 
@@ -90,7 +90,7 @@ def updateDesktops():
                         fullscreenDesktop.remove(splitted[2]+";"+splitted[3])
                         window.show()
 
-def die(): os.kill(os.getpid(), signal.SIGKILL)
+def die(): sys.exit(0)
 
 def menuChanged(text):
     linedit.setText(text)
