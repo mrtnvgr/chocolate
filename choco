@@ -4,7 +4,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 import os, sys, json, subprocess, threading, time, requests, datetime, argparse
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-version = "0.1.4"
+version = "0.1.5"
 
 def term_run(cmd): return subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, cwd=sys.path[0]).stdout.decode('utf-8').split("\n")
 
@@ -92,6 +92,10 @@ def updateDesktops():
 
 def die(): sys.exit(0)
 
+def wait(intrv):
+    time.sleep(intrv)
+    die()
+
 def menuChanged(text):
     linedit.setText(text)
     #linedit.adjustSize()
@@ -119,6 +123,7 @@ parser.add_argument('-c','--config', default='default', help='configuration file
 parser.add_argument('-m','--mode', help='mode')
 parser.add_argument('-t','--text', help='text (for menu&notify)')
 parser.add_argument('-ep', '--exec-prefix', help='exec prefix (for menu)')
+parser.add_argument('-et', '--expire-time', type=int, default=0, help='notification expire time (for notify)')
 parser.add_argument('-v','--version', action='store_true', help='version')
 args = parser.parse_args()
 
@@ -203,6 +208,7 @@ else:
         textlabel.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
         textlabel.setText(args.text)
         layout.addWidget(textlabel)
+        if args.expire_time!=0: threading.Thread(target=wait, args=[args.expire_time]).start()
         window.show()
     elif args.mode=="menu":
         linedit = QtWidgets.QLineEdit()
