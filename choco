@@ -4,7 +4,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 import os, sys, json, subprocess, threading, time, requests, datetime, argparse
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-version = "0.1.5"
+version = "0.1.6"
 
 def term_run(cmd): return subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, cwd=sys.path[0]).stdout.decode('utf-8').split("\n")
 
@@ -31,17 +31,19 @@ def rates(rt1, rt2):
 
 def date(formt): return datetime.datetime.now().strftime(formt)
 
+def title():
+    active_window_id = term_run("xprop -root _NET_ACTIVE_WINDOW")[0].split("# ")[1]
+    if active_window_id=="0x0": return ""
+    try:
+        return term_run("xprop -id " + active_window_id + " WM_NAME 2>&1")[0].split('= ')[1][1:][:-1]
+    except IndexError:
+        return ""
+
 def updateModule(align, index):
-    if align=="right":
-        cmd = config["right_modules"][index][0]
-        label = config["right_modules"][index][1]
-        intrv = config["right_modules"][index][2]
-        term = config["right_modules"][index][3]
-    elif align=="center":
-        cmd = config["center_modules"][index][0]
-        label = config["center_modules"][index][1]
-        intrv = config["center_modules"][index][2]
-        term = config["center_modules"][index][3]
+    cmd = config[align][index][0]
+    label = config[align][index][1]
+    intrv = config[align][index][2]
+    term = config[align][index][3]
     while True:
         if term.lower()=="true":
             output = term_run(cmd)[0]
@@ -50,10 +52,10 @@ def updateModule(align, index):
             if output==False:
                 time.sleep(intrv)
                 continue
-        if align=="right":
+        if align=="right_modules":
             RIGHTOUTPUTS[index] = label.format(output)
             rightlabel.setText(config["spacing"].join(RIGHTOUTPUTS))
-        elif align=="center":
+        elif align=="center_modules":
             CENTEROUTPUTS[index] = output
             centerlabel.setText(label.format(config["spacing"].join(CENTEROUTPUTS)))
         time.sleep(intrv)
@@ -129,8 +131,6 @@ args = parser.parse_args()
 
 if args.version==True:
     print("Chocolate "+version+" ଲ(ⓛ ω ⓛ)ଲ")
-elif os.path.exists(args.config):
-    print("Specify config file")
 elif args.mode==None:
     print("Specify mode")
 elif args.mode!="bar" and args.text==None:
@@ -193,9 +193,9 @@ else:
         layout.addWidget(rightlabel)
 
         for module in range(len(config["right_modules"])):
-            threading.Thread(target=updateModule, args=["right", module]).start()
+            threading.Thread(target=updateModule, args=["right_modules", module]).start()
         for module in range(len(config["center_modules"])):
-            threading.Thread(target=updateModule, args=["center", module]).start()
+            threading.Thread(target=updateModule, args=["center_modules", module]).start()
         threading.Thread(target=updateDesktops).start()
         window.show()
     elif args.mode=="notify":

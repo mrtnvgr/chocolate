@@ -27,11 +27,11 @@
 	"wm": "bspwm",
 	"spacing": "",
 	"center_modules": [
-		["echo center!", "{}", 1, "true"]
+		["title()", "{}", 0, "false"]
 	],
 	"right_modules": [
 		["rates('rub', 'usd')", "[$:{} ", 120, "false"],
 		["rates('rub', 'eur')", "€:{}]", 120, "false"],
-		["uptime -p", "{}", 60, "true"]
+		["uptime -p", "   {}", 60, "true"]
 	]
 }
