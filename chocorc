@@ -26,6 +26,7 @@
 	},
 	"wm": "bspwm",
 	"spacing": "",
+	"leftformat": "    [{}]",
 	"center_modules": [
 		["title()", "{}", 0, "false"]
 	],

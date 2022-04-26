@@ -4,7 +4,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 import os, sys, json, subprocess, threading, time, requests, datetime, argparse
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-version = "0.1.6"
+version = "0.1.7"
 
 def term_run(cmd): return subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, cwd=sys.path[0]).stdout.decode('utf-8').split("\n")
 
@@ -64,7 +64,7 @@ def updateDesktops():
     if config["wm"]=="bspwm":
         curDesktop = term_run("bspc query -D -d focused")[0]
         curDesktopName = term_run("bspc query -D -d focused --names")[0]
-        leftlabel.setText("    " + curDesktopName)
+        leftlabel.setText(config["leftformat"].format(curDesktopName))
         fullscreenDesktop = []
         with subprocess.Popen(["bspc","subscribe","desktop_focus", "node_state", "node_remove"], stdout=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
             for line in p.stdout:
@@ -73,7 +73,7 @@ def updateDesktops():
                 if 'desktop_focus' in line:
                     curDesktop = splitted[2]
                     curDesktopName = term_run("bspc query -T -d")[0].split('{"name":"')[1].split('","')[0]
-                    leftlabel.setText("    " + curDesktopName)
+                    leftlabel.setText(config["leftformat"].format(curDesktopName))
                     for desktop in fullscreenDesktop:
                         if curDesktop==desktop.split(";")[0]:
                             window.hide()
@@ -173,7 +173,7 @@ else:
     window.setCentralWidget(widget)
     if args.mode=="bar":
         leftlabel = QtWidgets.QLabel()
-        leftlabel.setAlignment(QtCore.Qt.AlignLeft)
+        #leftlabel.setAlignment(QtCore.Qt.AlignLeft)
         leftlabel.setStyleSheet(fontstyle+";border-right: 0px")
         leftlabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         leftlabel.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
