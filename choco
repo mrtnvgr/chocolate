@@ -4,7 +4,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 import os, sys, json, subprocess, threading, time, requests, datetime, argparse
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-version = "0.1.7"
+version = "0.1.8"
 
 def term_run(cmd): return subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, cwd=sys.path[0]).stdout.decode('utf-8').split("\n")
 
@@ -100,7 +100,6 @@ def wait(intrv):
 
 def menuChanged(text):
     linedit.setText(text)
-    #linedit.adjustSize()
     if text!="":
         d_elems = []
         for elem in args.text.split("\n"):
@@ -173,13 +172,13 @@ else:
     window.setCentralWidget(widget)
     if args.mode=="bar":
         leftlabel = QtWidgets.QLabel()
-        #leftlabel.setAlignment(QtCore.Qt.AlignLeft)
+        leftlabel.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignCenter)
         leftlabel.setStyleSheet(fontstyle+";border-right: 0px")
         leftlabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         leftlabel.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
 
         rightlabel = QtWidgets.QLabel()
-        rightlabel.setAlignment(QtCore.Qt.AlignRight)
+        rightlabel.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignCenter)
         rightlabel.setStyleSheet(fontstyle+";border-left: 0px")
         rightlabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         rightlabel.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
@@ -202,7 +201,7 @@ else:
         # TODO: on_click handlers
         textlabel = QtWidgets.QLabel()
         QtWidgets.QShortcut(QtGui.QKeySequence("RETURN"), textlabel, activated=die)
-        textlabel.setAlignment(QtCore.Qt.AlignLeft)
+        textlabel.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignCenter)
         textlabel.setStyleSheet(fontstyle)
         textlabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         textlabel.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
@@ -215,14 +214,14 @@ else:
         linedit.textChanged[str].connect(menuChanged)
         linedit.returnPressed.connect(menuReturnPressed)
         QtWidgets.QShortcut(QtGui.QKeySequence("ESCAPE"), linedit, activated=die)
-        linedit.setAlignment(QtCore.Qt.AlignLeft)
+        linedit.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignCenter)
         linedit.setStyleSheet(fontstyle+";border-right: 0px")
         linedit.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         linedit.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
         linedit.setFocusPolicy(QtCore.Qt.StrongFocus)
         layout.addWidget(linedit)
         elementslabel = QtWidgets.QLabel()
-        elementslabel.setAlignment(QtCore.Qt.AlignRight)
+        elementslabel.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignCenter)
         elementslabel.setStyleSheet(fontstyle+";border-left: 0px")
         elementslabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         elementslabel.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
