@@ -1,10 +1,10 @@
 #!/bin/python
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
-import os, sys, json, subprocess, threading, time, requests, datetime, argparse
-from PyQt5 import QtCore, QtWidgets, QtGui
+import argparse, datetime, json, os, subprocess, sys, threading, time, requests
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-version = "0.1.8"
+version = "0.1.8-1"
 
 def term_run(cmd): return subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, cwd=sys.path[0]).stdout.decode('utf-8').split("\n")
 
@@ -49,9 +49,7 @@ def updateModule(align, index):
             output = term_run(cmd)[0]
         else:
             output = eval(cmd)
-            if output==False:
-                time.sleep(intrv)
-                continue
+            if output==False: continue
         if align=="right_modules":
             RIGHTOUTPUTS[index] = label.format(output)
             rightlabel.setText(config["spacing"].join(RIGHTOUTPUTS))
@@ -172,7 +170,6 @@ else:
     window.setCentralWidget(widget)
     if args.mode=="bar":
         leftlabel = QtWidgets.QLabel()
-        leftlabel.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignCenter)
         leftlabel.setStyleSheet(fontstyle+";border-right: 0px")
         leftlabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         leftlabel.setFont(QtGui.QFont(config["font"]["family"], config["font"]["size"]))
